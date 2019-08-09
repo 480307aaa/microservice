@@ -1,0 +1,33 @@
+    @RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
+    public void testUploadFile() throws IOException {
+
+       // File file=new File("D:\projects\microServiceDemo\out\production\resources\application.yml");
+
+        Resource resource = new FileSystemResource("monitormonitor.log");
+
+        //InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(file.getName());
+
+        CooperationFileInfo result = cooperationFileMicroservice.uploadFile("TEST", UUID.randomUUID().toString(), resource.getFile());
+
+        System.out.println(JSON.toJSONString(result, true));
+
+    }
+	
+	//restTemplate方式封装上传文件的接口
+	
+	private CooperationFileInfo uploadFile(String businessLine, String businessId, AbstractResource resource) {
+        String path = String.format(URL_UPLOAD_FILE, businessLine, businessId, tokenService.buildToken());
+        String url = properties.concatURL(properties.getHost(), path);
+
+
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+        parts.add("files", resource);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(parts, headers);
+        ResponseEntity<CooperationFileList.CooperationFileListDTO> exchange = getRestTemplate()
+                .exchange(url, HttpMethod.POST, request, CooperationFileList.CooperationFileListDTO.class);
+
+        return exchange.getBody().getData().get(0).build();
+    }
+	
